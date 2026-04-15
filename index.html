@@ -3,134 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SQUIRE-OS MK VI</title>
+    <title>ARTHUR OS MK IX</title>
     <style>
-        :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.1); }
+        :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.15); }
         body { background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; }
         
-        #boot-layer { position: fixed; inset: 0; background: var(--dark); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; }
-        .hud { height: 100vh; display: flex; flex-direction: column; padding: 15px; visibility: hidden; }
-
-        /* Compass: FIXED SPASM */
-        .compass-wrap { position: relative; display: flex; align-items: center; justify-content: center; height: 180px; }
-        #mag-ring { 
-            width: 150px; height: 150px; border: 2px solid var(--neon); border-radius: 50%; 
-            position: relative; border-style: double;
-            /* NO TRANSITION HERE = NO SPASM */
+        /* THE FIX: Entire screen is now the button */
+        #boot-layer { 
+            position: fixed; inset: 0; background: var(--dark); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-        #mag-ring::before { content: '▲'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
-        #deg-readout { position: absolute; font-size: 28px; font-weight: bold; }
+        .boot-prompt { border: 2px solid var(--neon); padding: 50px; text-align: center; animation: glow 2s infinite; }
 
-        /* Stratagem Mini-Game */
-        .game-box { border: 1px solid var(--neon); margin: 10px 0; padding: 10px; text-align: center; background: rgba(0,0,0,0.8); }
-        .arrows { font-size: 24px; letter-spacing: 10px; min-height: 30px; }
-        .key-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 120px; margin: 5px auto; }
-        .k-btn { border: 1px solid var(--neon); background: var(--fade); color: var(--neon); padding: 5px; font-size: 12px; cursor: pointer; }
+        .hud { height: 100vh; display: flex; flex-direction: column; padding: 15px; display: none; position: relative; }
 
-        .data-sector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .box { border: 1px solid var(--fade); padding: 5px; background: rgba(0,212,255,0.03); font-size: 11px; }
+        /* Fancy Compass - No Spasm */
+        .compass-area { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; margin: 10px 0; }
+        .scan-ring { position: absolute; width: 190px; height: 190px; border: 1px solid var(--fade); border-radius: 50%; border-top: 2px solid var(--neon); animation: spin 4s linear infinite; }
+        #mag-ring { width: 140px; height: 140px; border: 2px solid var(--neon); border-radius: 50%; position: relative; border-style: double; }
+        .cursor { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 20px; z-index: 10; }
+        #deg-readout { position: absolute; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px var(--neon); }
 
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 15px; text-align: center; text-decoration: none; font-size: 10px; font-weight: bold; }
+        /* Tactical Tab */
+        #tac-tab { 
+            position: absolute; bottom: -280px; left: 0; width: 100%; height: 330px; 
+            background: rgba(0,10,15,0.98); border-top: 2px solid var(--neon); 
+            transition: 0.3s ease-out; z-index: 100; padding: 15px; box-sizing: border-box;
+        }
+        #tac-tab.open { bottom: 0; }
+        .handle { 
+            width: 100px; height: 30px; background: var(--neon); color: black; 
+            margin: -45px auto 10px auto; text-align: center; font-weight: bold; 
+            line-height: 30px; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+        }
+
+        /* Symbol Sequencer */
+        .arrow-box { font-size: 35px; text-align: center; height: 45px; margin: 10px 0; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .k-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 180px; margin: 0 auto; }
+        .k-btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 15px; font-size: 24px; border-radius: 5px; }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-bottom: 70px; }
+        .stat { border: 1px solid var(--fade); padding: 10px; background: rgba(0,212,255,0.05); }
+        .val { font-size: 16px; font-weight: bold; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--neon); } 50% { box-shadow: 0 0 20px var(--neon); } }
     </style>
 </head>
-<body>
+<body onclick="handleGlobalClick()">
 
-<div id="boot-layer" onclick="initializeSuit()">
-    <div style="border: 2px solid var(--neon); padding: 30px; text-align: center;">
-        <div>[ LINK STATUS: OFFLINE ]</div>
-        <div style="font-size: 10px; margin-top: 15px;">TAP TO INITIALIZE</div>
+<div id="boot-layer">
+    <div class="boot-prompt">
+        <div style="font-size: 18px; letter-spacing: 3px;">ARTHUR OS</div>
+        <div style="font-size: 9px; margin-top: 15px; opacity: 0.6;">SYSTEM READY - TAP ANYWHERE</div>
     </div>
 </div>
 
-<div class="hud" id="main-interface">
-    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--neon); padding-bottom: 5px; font-size: 12px;">
-        <div id="date-display"></div>
-        <div id="clock-display"></div>
+<div class="hud" id="hud-interface">
+    <div style="display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid var(--neon); padding-bottom: 5px;">
+        <div id="date-ptr"></div>
+        <div id="time-ptr"></div>
     </div>
 
-    <div class="compass-wrap">
+    <div class="compass-area">
+        <div class="cursor">▼</div>
+        <div class="scan-ring"></div>
         <div id="mag-ring"></div>
         <div id="deg-readout">0°</div>
     </div>
 
-    <div class="game-box">
-        <div style="font-size: 9px; margin-bottom: 5px;">STRATAGEM TRAINING</div>
-        <div id="target-arrows" style="color: grey;">W A S D</div>
-        <div id="input-arrows" class="arrows"></div>
-        <div class="key-pad">
-            <button class="k-btn" onclick="playGame('W')">↑</button>
+    <div class="data-grid">
+        <div class="stat"><div style="font-size: 9px;">VELOCITY</div><div class="val" id="v-spd">0.0 MPH</div></div>
+        <div class="stat"><div style="font-size: 9px;">ALTITUDE</div><div class="val" id="v-alt">0 FT</div></div>
+        <div class="stat" style="grid-column: span 2;"><div style="font-size: 9px;">COORDINATES</div><div class="val" id="v-gps" style="font-size: 12px;">ACQUIRING...</div></div>
+    </div>
+
+    <div id="tac-tab">
+        <div class="handle" onclick="toggleTab(event)">TACTICAL</div>
+        <div style="text-align: center; font-size: 10px; opacity: 0.5;">SYMBOL SEQUENCER</div>
+        <div id="target-display" style="text-align: center; font-size: 12px; margin-top: 5px; color: #555;"></div>
+        <div id="input-display" class="arrow-box"></div>
+        <div class="k-grid">
+            <button class="k-btn" onclick="gameInput('↑', event)">↑</button>
             <span></span>
-            <button class="k-btn" onclick="playGame('A')">←</button>
-            <button class="k-btn" onclick="playGame('S')">↓</button>
-            <button class="k-btn" onclick="playGame('D')">→</button>
+            <button class="k-btn" onclick="gameInput('←', event)">←</button>
+            <button class="k-btn" onclick="gameInput('↓', event)">↓</button>
+            <button class="k-btn" onclick="gameInput('→', event)">→</button>
         </div>
-    </div>
-
-    <div class="data-sector">
-        <div class="box">L-VEL: <span id="speed-val">0.0</span> MPH</div>
-        <div class="box">ALT: <span id="alt-val">0</span> FT</div>
-        <div class="box" style="grid-column: span 2; font-size: 9px;" id="coord-val">SIGNAL SEARCHING...</div>
-    </div>
-
-    <div class="btn-grid">
-        <a href="shortcuts://run-shortcut?name=Status" class="btn">STATUS</a>
-        <a href="shortcuts://run-shortcut?name=Location" class="btn">GEO-MAP</a>
-        <a href="shortcuts://run-shortcut?name=Stealth" class="btn">STEALTH</a>
-        <a href="shortcuts://run-shortcut?name=Suit%20Up" class="btn">RE-BOOT</a>
     </div>
 </div>
 
 <script>
+    let booted = false;
     const tts = window.speechSynthesis;
-    let targetPattern = [];
-    let userPattern = [];
+    let targetSeq = [];
+    let userSeq = [];
 
-    function generatePattern() {
-        const keys = ['W', 'A', 'S', 'D'];
-        targetPattern = Array.from({length: 4}, () => keys[Math.floor(Math.random() * 4)]);
-        document.getElementById('target-arrows').innerText = targetPattern.join(' ');
-        document.getElementById('input-arrows').innerText = '';
-        userPattern = [];
-    }
+    function handleGlobalClick() {
+        if (!booted) {
+            booted = true;
+            document.getElementById('boot-layer').style.display = 'none';
+            document.getElementById('hud-interface').style.display = 'flex';
+            
+            // Start Arthur
+            const speech = new SpeechSynthesisUtterance("Welcome back, Lachlan. All systems online.");
+            const voices = tts.getVoices();
+            speech.voice = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices;
+            tts.speak(speech);
 
-    function playGame(key) {
-        userPattern.push(key);
-        document.getElementById('input-arrows').innerText = userPattern.join(' ');
-        if (userPattern[userPattern.length-1] !== targetPattern[userPattern.length-1]) {
-            userPattern = [];
-            document.getElementById('input-arrows').style.color = 'red';
-            setTimeout(() => { document.getElementById('input-arrows').style.color = var(--neon); document.getElementById('input-arrows').innerText = ''; }, 300);
-        } else if (userPattern.length === targetPattern.length) {
-            document.getElementById('input-arrows').style.color = 'yellow';
-            setTimeout(() => { 
-                document.getElementById('input-arrows').style.color = 'white';
-                generatePattern(); 
-            }, 500);
-        }
-    }
+            // Permissions
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission();
+            }
 
-    function initializeSuit() {
-        const utter = new SpeechSynthesisUtterance("Welcome back, Lachlan. All systems online.");
-        const voices = tts.getVoices();
-        utter.voice = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices.find(v => v.lang.includes('en-GB'));
-        tts.speak(utter);
-
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission();
-        }
-
-        if (navigator.geolocation) {
             navigator.geolocation.watchPosition(p => {
-                document.getElementById('speed-val').innerText = (p.coords.speed * 2.237 || 0).toFixed(1);
-                document.getElementById('alt-val').innerText = (p.coords.altitude * 3.281 || 0).toFixed(0);
-                document.getElementById('coord-val').innerText = `${p.coords.latitude.toFixed(4)} N / ${p.coords.longitude.toFixed(4)} W`;
-            }, null, { enableHighAccuracy: true });
-        }
+                document.getElementById('v-spd').innerText = (p.coords.speed * 2.237 || 0).toFixed(1) + " MPH";
+                document.getElementById('v-alt').innerText = (p.coords.altitude * 3.281 || 0).toFixed(0) + " FT";
+                document.getElementById('v-gps').innerText = `${p.coords.latitude.toFixed(4)}N ${p.coords.longitude.toFixed(4)}W`;
+            }, null, {enableHighAccuracy: true});
 
-        document.getElementById('boot-layer').style.display = 'none';
-        document.getElementById('main-interface').style.visibility = 'visible';
-        generatePattern();
+            newGame();
+        }
+    }
+
+    function toggleTab(e) {
+        e.stopPropagation();
+        document.getElementById('tac-tab').classList.toggle('open');
+    }
+
+    function newGame() {
+        const icons = ['↑', '←', '↓', '→'];
+        targetSeq = Array.from({length: 4}, () => icons[Math.floor(Math.random() * 4)]);
+        document.getElementById('target-display').innerText = targetSeq.join(' ');
+        document.getElementById('input-display').innerText = '';
+        document.getElementById('input-display').style.color = 'white';
+        userSeq = [];
+    }
+
+    function gameInput(dir, e) {
+        e.stopPropagation();
+        userSeq.push(dir);
+        document.getElementById('input-display').innerText = userSeq.join(' ');
+        
+        if (userSeq[userSeq.length-1] !== targetSeq[userSeq.length-1]) {
+            userSeq = [];
+            document.getElementById('input-display').style.color = 'red';
+            setTimeout(() => { document.getElementById('input-display').innerText = ''; document.getElementById('input-display').style.color = 'white'; }, 300);
+        } else if (userSeq.length === targetSeq.length) {
+            document.getElementById('input-display').style.color = 'yellow';
+            setTimeout(newGame, 400);
+        }
     }
 
     window.addEventListener('deviceorientation', (e) => {
@@ -142,9 +164,9 @@
     });
 
     setInterval(() => {
-        const n = new Date();
-        document.getElementById('clock-display').innerText = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true});
-        document.getElementById('date-display').innerText = n.toLocaleDateString();
+        const d = new Date();
+        document.getElementById('time-ptr').innerText = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true});
+        document.getElementById('date-ptr').innerText = d.toLocaleDateString();
     }, 1000);
 </script>
 </body>
