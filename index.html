@@ -3,81 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>SQUIRE-OS</title>
+    <title>SQUIRE-OS MK III</title>
     <style>
-        :root { --blue: #00d4ff; --bg: #050505; }
+        :root { --blue: #00d4ff; --bg: #050505; --low: rgba(0, 212, 255, 0.1); }
         body { background: var(--bg); color: var(--blue); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; }
-        .hud { display: flex; flex-direction: column; height: 100vh; padding: 20px; box-sizing: border-box; border: 2px solid var(--blue); }
-        .top { display: flex; justify-content: space-between; border-bottom: 1px solid var(--blue); padding-bottom: 10px; }
-        .mid { flex-grow: 1; display: flex; align-items: center; justify-content: space-around; }
-        #compass { width: 140px; height: 140px; border: 2px solid var(--blue); border-radius: 50%; position: relative; }
-        #compass::after { content: 'N'; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-weight: bold; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid var(--blue); padding-top: 20px; }
-        .btn { background: rgba(0, 212, 255, 0.1); color: var(--blue); border: 1px solid var(--blue); padding: 20px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; }
-        #boot-btn { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: var(--bg); color: var(--blue); border: none; font-size: 20px; font-family: inherit; cursor: pointer; }
+        .frame { height: 100vh; display: flex; flex-direction: column; padding: 15px; border: 2px solid var(--blue); box-sizing: border-box; }
+        
+        /* Top Header */
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--blue); padding-bottom: 5px; font-size: 14px; }
+        
+        /* New Tactical Compass */
+        .compass-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #ring { width: 160px; height: 160px; border: 2px solid var(--blue); border-radius: 50%; position: relative; border-style: double; }
+        #ring::before { content: ''; position: absolute; top: -10px; left: 50%; width: 2px; height: 20px; background: var(--blue); transform: translateX(-50%); }
+        #deg-val { font-size: 32px; font-weight: bold; margin-top: 15px; text-shadow: 0 0 10px var(--blue); }
+
+        /* Health Metrics */
+        .vitals { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat { border: 1px solid var(--low); padding: 10px; background: rgba(0,0,0,0.5); }
+        .label { font-size: 10px; color: rgba(0, 212, 255, 0.6); }
+        .val { font-size: 18px; }
+        .pulse { animation: beat 0.8s infinite; color: #ff3333; }
+        @keyframes beat { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+        /* Panel Buttons */
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .pnl { background: var(--low); border: 1px solid var(--blue); color: var(--blue); padding: 18px; text-align: center; text-decoration: none; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <button id="boot-btn" onclick="bootSystem()">[ TAP TO INITIALIZE SUIT ]</button>
+<div class="frame">
+    <div class="header">
+        <div id="date">--/--/--</div>
+        <div id="time">12:00:00 PM</div>
+    </div>
 
-    <div class="hud">
-        <div class="top">
-            <div id="date">--/--/--</div>
-            <div id="clock">00:00:00</div>
+    <div class="compass-area">
+        <div id="ring"></div>
+        <div id="deg-val">0°</div>
+    </div>
+
+    <div class="vitals">
+        <div class="stat">
+            <div class="label">NEURAL PULSE</div>
+            <div class="val"><span class="pulse">●</span> <span id="bpm">72</span> BPM</div>
         </div>
-
-        <div class="mid">
-            <div style="text-align:center">
-                <div id="compass"></div>
-                <div id="deg" style="margin-top:10px">0°</div>
-            </div>
-            <div style="width:40%">
-                <div style="font-size:10px">SYSTEM INTEGRITY</div>
-                <div style="width:100%; height:10px; border:1px solid var(--blue); margin-top:5px">
-                    <div style="width:92%; height:100%; background:var(--blue)"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid">
-            <a href="shortcuts://run-shortcut?name=Status" class="btn">STATUS</a>
-            <a href="shortcuts://run-shortcut?name=Location" class="btn">LOCATION</a>
-            <a href="shortcuts://run-shortcut?name=Stealth" class="btn">STEALTH</a>
-            <a href="shortcuts://run-shortcut?name=Suit%20Up" class="btn">RE-BOOT</a>
+        <div class="stat">
+            <div class="label">PEDOMETER</div>
+            <div class="val" id="steps">0412 STPS</div>
         </div>
     </div>
 
-    <script>
-        function bootSystem() {
-            // 1. Request Compass Permission
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(response => {
-                    if (response == 'granted') {
-                        window.addEventListener('deviceorientation', (e) => {
-                            let heading = e.webkitCompassHeading || (360 - e.alpha);
-                            document.getElementById('compass').style.transform = `rotate(${-heading}deg)`;
-                            document.getElementById('deg').innerText = Math.round(heading) + '°';
-                        }, true);
-                    }
-                });
-            }
+    <div class="controls">
+        <a href="shortcuts://run-shortcut?name=Status" class="pnl">STATUS</a>
+        <a href="shortcuts://run-shortcut?name=Location" class="pnl">LOCATION</a>
+        <a href="shortcuts://run-shortcut?name=Stealth" class="pnl">STEALTH</a>
+        <a href="shortcuts://run-shortcut?name=Suit%20Up" class="pnl">RE-BOOT</a>
+    </div>
+</div>
 
-            // 2. Hide the Boot Button
-            document.getElementById('boot-btn').style.display = 'none';
+<script>
+    function updateHUD() {
+        const now = new Date();
+        // 12-Hour Clock Format
+        document.getElementById('time').innerText = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', second:'2-digit', hour12: true});
+        document.getElementById('date').innerText = now.toLocaleDateString();
+        
+        // Simulating Heart Rate variance
+        document.getElementById('bpm').innerText = Math.floor(Math.random() * 5) + 70;
+    }
+    setInterval(updateHUD, 1000);
 
-            // 3. AUTO-RUN "Suit Up" Shortcut
-            window.location.href = "shortcuts://run-shortcut?name=Suit%20Up";
+    window.addEventListener('deviceorientation', (e) => {
+        let h = e.webkitCompassHeading || (360 - e.alpha);
+        if(h) {
+            document.getElementById('ring').style.transform = `rotate(${-h}deg)`;
+            document.getElementById('deg-val').innerText = Math.round(h) + '°';
         }
+    });
 
-        function update() {
-            const n = new Date();
-            document.getElementById('clock').innerText = n.toLocaleTimeString([], {hour12:false});
-            document.getElementById('date').innerText = n.toLocaleDateString();
+    // Tap anywhere to unlock orientation (Required for iOS)
+    document.body.onclick = () => {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission();
         }
-        setInterval(update, 1000);
-        update();
-    </script>
+    };
+</script>
 </body>
 </html>
