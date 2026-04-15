@@ -3,30 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ARTHUR OS MK X</title>
+    <title>ARTHUR OS MK XI</title>
     <style>
         :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.15); }
-        body { background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; }
+        body { background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; user-select: none; }
         
         #boot-layer { position: fixed; inset: 0; background: var(--dark); z-index: 1000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .boot-prompt { border: 2px solid var(--neon); padding: 50px; text-align: center; }
+        .boot-prompt { border: 2px solid var(--neon); padding: 50px; text-align: center; box-shadow: 0 0 20px var(--neon); }
 
         .hud { height: 100vh; display: flex; flex-direction: column; padding: 15px; display: none; position: relative; }
 
-        /* Compass Overhaul */
+        /* Fancy Tactical Compass */
         .compass-area { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
-        .zero-point { position: absolute; top: -5px; color: white; font-size: 10px; font-weight: bold; z-index: 5; }
+        .outer-ring { position: absolute; width: 200px; height: 200px; border: 1px dashed var(--neon); border-radius: 50%; animation: spin 20s linear infinite; opacity: 0.3; }
+        .zero-point { position: absolute; top: -10px; color: white; font-size: 10px; font-weight: bold; z-index: 10; text-shadow: 0 0 5px var(--neon); }
         
         #mag-ring { 
             width: 140px; height: 140px; border: 2px solid var(--neon); border-radius: 50%; 
             position: relative; border-style: double; transition: none; 
         }
-        /* Red Cursor attached to the rotating ring */
-        .red-ptr { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 18px; }
+        .red-ptr { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 20px; text-shadow: 0 0 5px red; }
 
         /* Tactical Tab */
         #tac-tab { 
-            position: absolute; bottom: -280px; left: 0; width: 100%; height: 330px; 
+            position: absolute; bottom: -290px; left: 0; width: 100%; height: 340px; 
             background: rgba(0,10,15,0.98); border-top: 2px solid var(--neon); 
             transition: 0.3s ease-out; z-index: 100; padding: 15px; box-sizing: border-box;
         }
@@ -37,14 +37,19 @@
             line-height: 30px; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
         }
 
-        /* Symbol Sequencer - FIXED LAYOUT */
+        /* Symbol Sequencer Keys */
         .arrow-box { font-size: 35px; text-align: center; height: 45px; margin: 10px 0; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .k-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 180px; margin: 0 auto; }
-        .k-btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 15px; font-size: 24px; border-radius: 5px; text-align: center; }
+        .k-btn { 
+            background: var(--fade); border: 1px solid var(--neon); color: var(--neon); 
+            padding: 15px; font-size: 24px; border-radius: 5px; transition: 0.1s;
+        }
+        .k-btn:active { background: var(--neon); color: black; transform: scale(1.1); box-shadow: 0 0 15px var(--neon); }
 
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-bottom: 70px; }
         .stat { border: 1px solid var(--fade); padding: 10px; background: rgba(0,212,255,0.05); }
-        .val { font-size: 16px; font-weight: bold; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body onclick="handleGlobalClick()">
@@ -63,6 +68,7 @@
     </div>
 
     <div class="compass-area">
+        <div class="outer-ring"></div>
         <div class="zero-point">| 0 |</div>
         <div id="mag-ring">
             <div class="red-ptr">▼</div>
@@ -71,15 +77,15 @@
     </div>
 
     <div class="data-grid">
-        <div class="stat"><div style="font-size: 9px;">VELOCITY</div><div class="val" id="v-spd">0.0 MPH</div></div>
-        <div class="stat"><div style="font-size: 9px;">ALTITUDE</div><div class="val" id="v-alt">0 FT</div></div>
-        <div class="stat" style="grid-column: span 2;"><div style="font-size: 9px;">COORDINATES</div><div class="val" id="v-gps" style="font-size: 12px;">ACQUIRING...</div></div>
+        <div class="stat"><div style="font-size: 9px;">VELOCITY</div><div id="v-spd" style="font-size: 16px; font-weight: bold;">0.0 MPH</div></div>
+        <div class="stat"><div style="font-size: 9px;">ALTITUDE</div><div id="v-alt" style="font-size: 16px; font-weight: bold;">0 FT</div></div>
+        <div class="stat" style="grid-column: span 2;"><div style="font-size: 9px;">COORDINATES</div><div id="v-gps" style="font-size: 12px; font-weight: bold;">ACQUIRING...</div></div>
     </div>
 
     <div id="tac-tab">
         <div class="handle" onclick="toggleTab(event)">TACTICAL</div>
         <div style="text-align: center; font-size: 10px; opacity: 0.5;">SYMBOL SEQUENCER</div>
-        <div id="target-display" style="text-align: center; font-size: 12px; margin-top: 5px; color: #555;"></div>
+        <div id="target-display" style="text-align: center; font-size: 14px; margin-top: 5px; color: rgba(255,255,255,0.2);"></div>
         <div id="input-display" class="arrow-box"></div>
         
         <div class="k-grid">
@@ -96,29 +102,37 @@
     const tts = window.speechSynthesis;
     let targetSeq = [];
     let userSeq = [];
-
-    // Pre-load voices to fix the "No Voice" bug
-    tts.getVoices();
+    
+    // Create Audio Context for "Blip" sound
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBlip(freq = 800) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
 
     function speak(text) {
         const speech = new SpeechSynthesisUtterance(text);
         const voices = tts.getVoices();
-        // Try to find British Male, default to any British, then any available
-        let v = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || 
-                voices.find(v => v.lang.includes('en-GB')) || 
-                voices;
+        let v = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices.find(v => v.lang.includes('en-GB')) || voices;
         speech.voice = v;
-        speech.rate = 1.0;
         tts.speak(speech);
     }
 
     function handleGlobalClick() {
         if (!booted) {
             booted = true;
+            audioCtx.resume();
             document.getElementById('boot-layer').style.display = 'none';
             document.getElementById('hud-interface').style.display = 'flex';
-            
-            // Arthur Greeting
+            playBlip(1200);
             speak("Welcome back, Lachlan. All systems online.");
 
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -130,13 +144,13 @@
                 document.getElementById('v-alt').innerText = (p.coords.altitude * 3.281 || 0).toFixed(0) + " FT";
                 document.getElementById('v-gps').innerText = `${p.coords.latitude.toFixed(4)}N ${p.coords.longitude.toFixed(4)}W`;
             }, null, {enableHighAccuracy: true});
-
             newGame();
         }
     }
 
     function toggleTab(e) {
         e.stopPropagation();
+        playBlip(600);
         document.getElementById('tac-tab').classList.toggle('open');
     }
 
@@ -145,19 +159,24 @@
         targetSeq = Array.from({length: 4}, () => icons[Math.floor(Math.random() * 4)]);
         document.getElementById('target-display').innerText = targetSeq.join(' ');
         document.getElementById('input-display').innerText = '';
+        document.getElementById('input-display').style.color = 'white';
         userSeq = [];
     }
 
     function gameInput(dir, e) {
         e.stopPropagation();
+        playBlip(1000);
         userSeq.push(dir);
         document.getElementById('input-display').innerText = userSeq.join(' ');
+        
+        // CHECK LOGIC
         if (userSeq[userSeq.length-1] !== targetSeq[userSeq.length-1]) {
             userSeq = [];
             document.getElementById('input-display').style.color = 'red';
             setTimeout(() => { document.getElementById('input-display').innerText = ''; document.getElementById('input-display').style.color = 'white'; }, 300);
         } else if (userSeq.length === targetSeq.length) {
-            document.getElementById('input-arrows').style.color = 'yellow';
+            document.getElementById('input-display').style.color = '#ffff00';
+            playBlip(1500);
             setTimeout(newGame, 400);
         }
     }
@@ -165,7 +184,6 @@
     window.addEventListener('deviceorientation', (e) => {
         let h = e.webkitCompassHeading || (360 - e.alpha);
         if(h) {
-            // Rotating the whole ring so the red ptr moves
             document.getElementById('mag-ring').style.transform = `rotate(${-h}deg)`;
             document.getElementById('deg-readout').innerText = Math.round(h) + '°';
         }
