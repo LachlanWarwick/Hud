@@ -5,19 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ARTHUR OS MK XXXVIII</title>
+    <title>ARTHUR OS MK XXXIX</title>
     <style>
         :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.1); }
         
         * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; }
         html, body { position: fixed; overflow: hidden; width: 100%; height: 100%; background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 0; text-transform: uppercase; }
         
+        /* TACTICAL FRAME */
         body::before {
             content: ''; position: fixed; inset: 5px; border: 2px solid var(--neon);
             clip-path: polygon(0 0, 20% 0, 25% 5%, 75% 5%, 80% 0, 100% 0, 100% 100%, 80% 100%, 75% 95%, 25% 95%, 20% 100%, 0 100%);
             opacity: 0.3; pointer-events: none; z-index: 5001;
         }
 
+        /* RIPPLE EFFECT */
+        .ripple { position: absolute; border: 2px solid var(--neon); border-radius: 50%; pointer-events: none; animation: ripple-out 0.5s ease-out; transform: translate(-50%, -50%); z-index: 9999; }
+        @keyframes ripple-out { from { width: 0; height: 0; opacity: 1; } to { width: 120px; height: 120px; opacity: 0; } }
+
+        /* GRID */
         #grid-container { position: fixed; inset: 0; perspective: 1000px; z-index: -1; }
         #ground-grid { position: absolute; width: 400%; height: 400%; top: -150%; left: -150%; background-image: linear-gradient(var(--fade) 1px, transparent 1px), linear-gradient(90deg, var(--fade) 1px, transparent 1px); background-size: 60px 60px; transform: rotateX(75deg); transition: transform 0.5s cubic-bezier(0.1, 0.3, 0.1, 1); }
 
@@ -35,19 +41,23 @@
             .data-grid-container { width: 45%; }
         }
 
+        /* COMPASS */
         .compass-area { position: relative; height: 240px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
         .outer-ring { position: absolute; width: 220px; height: 220px; border: 1px solid var(--fade); border-radius: 50%; border-top: 3px solid var(--neon); animation: spin 10s linear infinite; }
         #mag-ring { width: 150px; height: 150px; border: 2px solid var(--neon); border-radius: 50%; position: relative; border-style: double; transition: transform 0.2s cubic-bezier(0.1, 0.3, 0.1, 1); }
         .red-ptr { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 28px; }
 
+        /* DATA GRID */
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .stat-box { border: 1px solid var(--fade); padding: 12px; background: rgba(0,212,255,0.02); border-left: 3px solid var(--neon); }
         .stat-val { font-size: 16px; font-weight: bold; color: white; margin-top: 4px; }
 
+        /* BUTTONS */
         #interaction-overlay { position: absolute; bottom: 160px; left: 50%; transform: translateX(-50%); display: none; flex-direction: row; gap: 15px; z-index: 7000; }
         .hud-btn { background: rgba(0, 212, 255, 0.15); border: 1px solid var(--neon); color: var(--neon); padding: 10px 20px; font-family: 'Courier New', monospace; font-size: 10px; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); transition: 0.2s; }
         .hud-btn:active { background: var(--neon); color: var(--dark); }
 
+        /* SOUL */
         .soul-container { position: relative; width: 140px; height: 90px; margin: 15px auto 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 6000; }
         .throb-orb { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(0,212,255,0.7) 0%, rgba(0,100,255,0) 70%); mix-blend-mode: screen; filter: blur(12px); pointer-events: none; }
         .t-1 { width: 65px; height: 65px; animation: throb-a 2.5s infinite ease-in-out; }
@@ -60,14 +70,14 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body oncontextmenu="return false;" ontouchstart="handleTouch(event)">
 
 <div id="grid-container"><div id="ground-grid"></div></div>
 
 <div id="boot-layer" onclick="bootSystem()">
     <div class="boot-box">
         <div style="font-size: 24px; letter-spacing: 10px;">ARTHUR</div>
-        <div style="font-size: 10px; margin-top: 20px;">[ INITIALIZE CORE ]</div>
+        <div style="font-size: 10px; margin-top: 20px;">[ INITIALIZE FEEDBACK ]</div>
     </div>
 </div>
 
@@ -109,11 +119,22 @@
 <script>
     let active = false, currentHeading = 0, awaitingResponse = false;
 
+    function handleTouch(e) {
+        if(!active) return;
+        for(let i=0; i<e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            const r = document.createElement('div');
+            r.className = 'ripple'; 
+            r.style.left = t.clientX + 'px'; 
+            r.style.top = t.clientY + 'px';
+            document.body.appendChild(r);
+            setTimeout(() => r.remove(), 500);
+        }
+    }
+
     function triggerArthurAssistant() {
         if(!active || awaitingResponse) return;
-        // Arthur now "communicates" silently by prompting the HUD buttons
-        // 30% chance to trigger a query interaction
-        if(Math.random() > 0.7) {
+        if(Math.random() > 0.6) {
             awaitingResponse = true;
             document.getElementById('interaction-overlay').style.display = 'flex';
         }
@@ -122,7 +143,6 @@
     function handleInput(choice) {
         document.getElementById('interaction-overlay').style.display = 'none';
         awaitingResponse = false;
-        // Logic for silent confirmation can go here
     }
 
     async function bootSystem() {
