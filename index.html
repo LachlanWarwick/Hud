@@ -4,181 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>SQUIRE-OS HUD</title>
+    <title>SQUIRE-OS</title>
     <style>
-        :root { 
-            --neon-blue: #00d4ff; 
-            --dark-bg: #050505; 
-            --glass: rgba(0, 212, 255, 0.1);
-        }
-
-        body { 
-            background-color: var(--dark-bg); 
-            color: var(--neon-blue); 
-            font-family: 'Courier New', monospace; 
-            margin: 0; 
-            overflow: hidden; 
-            text-transform: uppercase;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-        }
-
-        /* Scanline Overlay for Sci-Fi effect */
-        .scanline { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); 
-            background-size: 100% 4px; z-index: 10; pointer-events: none; 
-        }
-
-        .hud-container { 
-            display: flex; flex-direction: column; height: 100vh; 
-            padding: 20px; border: 2px solid var(--neon-blue); box-sizing: border-box; 
-            position: relative;
-        }
-
-        /* Top Bar: Time and Date */
-        .top-row { 
-            display: flex; justify-content: space-between; 
-            border-bottom: 1px solid var(--neon-blue); padding-bottom: 10px; 
-            font-size: 16px; font-weight: bold;
-        }
-
-        /* Middle Section: Compass and Vitals */
-        .middle-sector { 
-            flex-grow: 1; display: flex; align-items: center; justify-content: space-around; 
-        }
-
-        .compass-container { text-align: center; }
-
-        #compass-disc { 
-            width: 160px; height: 160px; 
-            border: 2px solid var(--neon-blue); border-radius: 50%; 
-            position: relative; 
-            /* REMOVED transition to fix 0-360 spasm */
-        }
-
-        #compass-disc::before { 
-            content: 'N'; position: absolute; top: 10px; left: 50%; 
-            transform: translateX(-50%); font-size: 20px; font-weight: bold; 
-        }
-
-        #degree-text { font-size: 24px; margin-top: 15px; letter-spacing: 2px; }
-
-        .vitals-box { width: 45%; }
-        .label { font-size: 10px; margin-bottom: 5px; }
-        .vital-bar { 
-            width: 100%; height: 15px; border: 1px solid var(--neon-blue); 
-            margin-bottom: 15px; background: #111; overflow: hidden;
-        }
-        .fill { 
-            height: 100%; background: var(--neon-blue); 
-            box-shadow: 0 0 15px var(--neon-blue); width: 100%;
-        }
-
-        /* Bottom Section: Shortcut Buttons */
-        .bottom-grid { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
-            border-top: 1px solid var(--neon-blue); padding-top: 20px; 
-        }
-
-        .btn { 
-            background: var(--glass); color: var(--neon-blue); 
-            border: 1px solid var(--neon-blue); padding: 20px; 
-            text-decoration: none; text-align: center; 
-            font-size: 12px; font-weight: bold; transition: 0.2s;
-        }
-
-        .btn:active { background: var(--neon-blue); color: #000; }
-
-        /* Calibration Button (Required for iOS sensors) */
-        #calibrate-btn { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            z-index: 100; padding: 25px 40px; background: var(--neon-blue); 
-            color: black; border: none; font-family: 'Courier New', monospace;
-            font-weight: bold; cursor: pointer; box-shadow: 0 0 20px var(--neon-blue);
-        }
+        :root { --blue: #00d4ff; --bg: #050505; }
+        body { background: var(--bg); color: var(--blue); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; }
+        .hud { display: flex; flex-direction: column; height: 100vh; padding: 20px; box-sizing: border-box; border: 2px solid var(--blue); }
+        .top { display: flex; justify-content: space-between; border-bottom: 1px solid var(--blue); padding-bottom: 10px; }
+        .mid { flex-grow: 1; display: flex; align-items: center; justify-content: space-around; }
+        #compass { width: 140px; height: 140px; border: 2px solid var(--blue); border-radius: 50%; position: relative; }
+        #compass::after { content: 'N'; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-weight: bold; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid var(--blue); padding-top: 20px; }
+        .btn { background: rgba(0, 212, 255, 0.1); color: var(--blue); border: 1px solid var(--blue); padding: 20px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; }
+        #boot-btn { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: var(--bg); color: var(--blue); border: none; font-size: 20px; font-family: inherit; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
-    
-    <button id="calibrate-btn" onclick="requestAccess()">SYSTEM INITIALIZE</button>
 
-    <div class="hud-container">
-        <div class="top-row">
-            <div id="date-display">00/00/00</div>
-            <div id="clock-display">00:00:00</div>
+    <button id="boot-btn" onclick="bootSystem()">[ TAP TO INITIALIZE SUIT ]</button>
+
+    <div class="hud">
+        <div class="top">
+            <div id="date">--/--/--</div>
+            <div id="clock">00:00:00</div>
         </div>
 
-        <div class="middle-sector">
-            <div class="compass-container">
-                <div id="compass-disc"></div>
-                <div id="degree-text">0&deg;</div>
+        <div class="mid">
+            <div style="text-align:center">
+                <div id="compass"></div>
+                <div id="deg" style="margin-top:10px">0°</div>
             </div>
-
-            <div class="vitals-box">
-                <div class="label">POWER CORE</div>
-                <div class="vital-bar"><div class="fill" style="width: 100%;"></div></div>
-                
-                <div class="label">ARMOR INTEGRITY</div>
-                <div class="vital-bar"><div class="fill" style="width: 85%;"></div></div>
-                
-                <div class="label">AI CONNECTION</div>
-                <div style="font-size: 12px;">ENCRYPTED_LINK</div>
+            <div style="width:40%">
+                <div style="font-size:10px">SYSTEM INTEGRITY</div>
+                <div style="width:100%; height:10px; border:1px solid var(--blue); margin-top:5px">
+                    <div style="width:92%; height:100%; background:var(--blue)"></div>
+                </div>
             </div>
         </div>
 
-        <div class="bottom-grid">
-            <a href="shortcuts://run-shortcut?name=Status" class="btn">STATUS SCAN</a>
-            <a href="shortcuts://run-shortcut?name=Suit%20Up" class="btn">INIT_SUIT</a>
-            <a href="shortcuts://run-shortcut?name=Combat" class="btn">COMBAT_MODE</a>
-            <a href="shortcuts://run-shortcut?name=Relax" class="btn">DISENGAGE</a>
+        <div class="grid">
+            <a href="shortcuts://run-shortcut?name=Status" class="btn">STATUS</a>
+            <a href="shortcuts://run-shortcut?name=Location" class="btn">LOCATION</a>
+            <a href="shortcuts://run-shortcut?name=Stealth" class="btn">STEALTH</a>
+            <a href="shortcuts://run-shortcut?name=Suit%20Up" class="btn">RE-BOOT</a>
         </div>
     </div>
 
     <script>
-        // Update Time & Date
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock-display').innerText = now.toLocaleTimeString([], {hour12: false});
-            document.getElementById('date-display').innerText = now.toLocaleDateString();
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // Permission & Compass Logic
-        function requestAccess() {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response == 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation, true);
-                            document.getElementById('calibrate-btn').style.display = 'none';
-                        }
-                    })
-                    .catch(err => {
-                        alert("Sensor Access Denied. Use Safari and Add to Home Screen.");
-                    });
-            } else {
-                window.addEventListener('deviceorientation', handleOrientation, true);
-                document.getElementById('calibrate-btn').style.display = 'none';
+        function bootSystem() {
+            // 1. Request Compass Permission
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(response => {
+                    if (response == 'granted') {
+                        window.addEventListener('deviceorientation', (e) => {
+                            let heading = e.webkitCompassHeading || (360 - e.alpha);
+                            document.getElementById('compass').style.transform = `rotate(${-heading}deg)`;
+                            document.getElementById('deg').innerText = Math.round(heading) + '°';
+                        }, true);
+                    }
+                });
             }
+
+            // 2. Hide the Boot Button
+            document.getElementById('boot-btn').style.display = 'none';
+
+            // 3. AUTO-RUN "Suit Up" Shortcut
+            window.location.href = "shortcuts://run-shortcut?name=Suit%20Up";
         }
 
-        function handleOrientation(event) {
-            // Priority: iOS True North -> Alpha fallback
-            let heading = event.webkitCompassHeading || (360 - event.alpha);
-            
-            if (heading !== undefined && heading !== null) {
-                const compass = document.getElementById('compass-disc');
-                const text = document.getElementById('degree-text');
-                
-                // Direct rotation without CSS transition prevents the 360 jump spasm
-                compass.style.transform = `rotate(${-heading}deg)`;
-                text.innerText = Math.round(heading) + "°";
-            }
+        function update() {
+            const n = new Date();
+            document.getElementById('clock').innerText = n.toLocaleTimeString([], {hour12:false});
+            document.getElementById('date').innerText = n.toLocaleDateString();
         }
+        setInterval(update, 1000);
+        update();
     </script>
 </body>
 </html>
