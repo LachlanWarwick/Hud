@@ -5,49 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ARTHUR OS MK XXI</title>
+    <title>ARTHUR OS MK XXIII</title>
     <style>
-        :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.15); }
+        :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.1); }
         html, body { position: fixed; overflow: hidden; width: 100%; height: 100%; background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 0; text-transform: uppercase; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Ground Grid Simulation */
-        #grid-container { position: fixed; inset: 0; perspective: 600px; z-index: -1; pointer-events: none; }
-        #ground-grid { 
-            position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-            background-image: linear-gradient(var(--fade) 2px, transparent 2px), linear-gradient(90deg, var(--fade) 2px, transparent 2px);
-            background-size: 60px 60px; transform-origin: center center; transform: rotateX(60deg); 
-            transition: transform 0.1s linear;
-        }
+        /* Ripple Effect */
+        .ripple { position: absolute; border: 2px solid var(--neon); border-radius: 50%; pointer-events: none; animation: ripple-out 0.4s ease-out; transform: translate(-50%, -50%); z-index: 9999; }
+        @keyframes ripple-out { from { width: 0; height: 0; opacity: 1; } to { width: 60px; height: 60px; opacity: 0; } }
 
-        #boot-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        /* Ground Grid */
+        #grid-container { position: fixed; inset: 0; perspective: 800px; z-index: -1; pointer-events: none; }
+        #ground-grid { position: absolute; width: 400%; height: 400%; top: -150%; left: -150%; background-image: linear-gradient(var(--fade) 1px, transparent 1px), linear-gradient(90deg, var(--fade) 1px, transparent 1px); background-size: 50px 50px; transform: rotateX(70deg); will-change: transform; }
+
+        #boot-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .boot-box { border: 2px solid var(--neon); padding: 50px; text-align: center; box-shadow: 0 0 20px var(--neon); background: var(--dark); }
 
-        .hud { height: 100%; display: none; flex-direction: column; padding: 60px 20px; position: relative; box-sizing: border-box; }
+        .hud { height: 100%; display: none; flex-direction: column; padding: 50px 20px; position: relative; box-sizing: border-box; transition: all 0.5s ease; }
+        
+        /* Landscape Layout Handling */
+        @media (orientation: landscape) {
+            .hud { flex-direction: row; align-items: center; justify-content: space-around; padding: 20px 60px; }
+            .data-grid { margin-top: 0; width: 45%; }
+            .compass-area { width: 45%; }
+            #tac-tab { width: 50% !important; left: 25% !important; }
+        }
 
-        .compass-area { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; }
-        #mag-ring { width: 140px; height: 140px; border: 2px solid var(--neon); border-radius: 50%; position: relative; border-style: double; }
-        .red-ptr { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 22px; }
+        .compass-area { position: relative; height: 220px; display: flex; align-items: center; justify-content: center; }
+        .outer-ring { position: absolute; width: 200px; height: 200px; border: 1px solid var(--fade); border-radius: 50%; border-top: 3px solid var(--neon); animation: spin 8s linear infinite; }
+        #mag-ring { width: 140px; height: 140px; border: 2px solid var(--neon); border-radius: 50%; position: relative; border-style: double; transition: transform 0.1s ease-out; }
+        .red-ptr { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 24px; filter: drop-shadow(0 0 5px #ff3333); }
 
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-box { border: 1px solid var(--fade); padding: 10px; background: rgba(0,212,255,0.05); }
-        .stat-val { font-size: 16px; font-weight: bold; color: white; margin-top: 4px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .stat-box { border: 1px solid var(--fade); padding: 8px; background: rgba(0,212,255,0.05); }
+        .stat-val { font-size: 14px; font-weight: bold; color: white; margin-top: 4px; }
 
-        #tac-tab { position: absolute; bottom: -380px; left: 0; width: 100%; height: 460px; background: rgba(0,10,15,0.98); border-top: 2px solid var(--neon); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 15px; box-sizing: border-box; }
+        #tac-tab { position: absolute; bottom: -380px; left: 0; width: 100%; height: 460px; background: rgba(0,10,15,0.95); border-top: 2px solid var(--neon); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 15px; box-sizing: border-box; backdrop-filter: blur(10px); }
         #tac-tab.open { bottom: 0; }
         .handle { width: 130px; height: 35px; background: var(--neon); color: black; margin: -50px auto 10px auto; text-align: center; font-weight: bold; line-height: 35px; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
 
-        .game-ctrl { display: flex; gap: 8px; margin-bottom: 10px; }
-        .ctrl-btn { flex: 1; border: none; padding: 12px; font-weight: bold; font-family: inherit; font-size: 11px; border-radius: 4px; }
-        .k-btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 18px; font-size: 28px; border-radius: 8px; }
+        .k-btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 15px; font-size: 24px; border-radius: 8px; }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
-<body onclick="bootSystem()">
+<body onclick="handleClick(event)">
 
 <div id="grid-container"><div id="ground-grid"></div></div>
 
-<div id="boot-layer">
+<div id="boot-layer" onclick="bootSystem(event)">
     <div class="boot-box">
         <div style="font-size: 24px; letter-spacing: 8px;">ARTHUR</div>
         <div style="font-size: 10px; margin-top: 20px;">[ TAP TO SYNC ]</div>
@@ -55,41 +61,41 @@
 </div>
 
 <div class="hud" id="hud">
-    <div style="display: flex; justify-content: space-between; font-size: 10px; border-bottom: 1px solid var(--neon); padding-bottom: 5px;">
+    <div style="position: absolute; top: 15px; width: calc(100% - 40px); display: flex; justify-content: space-between; font-size: 10px; border-bottom: 1px solid var(--neon); padding-bottom: 5px;">
         <div id="d-ptr">--/--/----</div>
         <div id="t-ptr">00:00:00</div>
     </div>
 
     <div class="compass-area">
+        <div class="outer-ring"></div>
         <div id="mag-ring"><div class="red-ptr">▼</div></div>
-        <div id="deg-readout" style="position: absolute; font-size: 32px; font-weight: bold; color: white;">0°</div>
+        <div id="deg-readout" style="position: absolute; font-size: 32px; font-weight: bold; color: white; text-shadow: 0 0 10px var(--neon);">0°</div>
     </div>
 
     <div class="data-grid">
         <div class="stat-box"><div>CURRENT VELOCITY</div><div class="stat-val" id="v-spd">0.0 MPH</div></div>
         <div class="stat-box"><div>CURRENT ALTITUDE</div><div class="stat-val" id="v-alt">0 FT</div></div>
-        <div class="stat-box" id="coord-box" style="grid-column: span 2;" onclick="requestGPS()">
-            <div id="coord-label">COORDINATES (RETRY)</div>
-            <div class="stat-val" id="v-gps" style="font-size: 11px;">SEARCHING...</div>
+        <div class="stat-box" style="grid-column: span 2;" onclick="requestGPS()">
+            <div>COORDINATES</div><div class="stat-val" id="v-gps" style="font-size: 11px;">SEARCHING...</div>
         </div>
-        <div class="stat-box"><div>INTERNAL TEMP</div><div class="stat-val">74.2°F</div></div>
-        <div class="stat-box"><div>SIGNAL STRENGTH</div><div class="stat-val" id="v-sig">EXCELLENT</div></div>
+        <div class="stat-box"><div>INTERNAL TEMP</div><div class="stat-val">23.4°C</div></div>
+        <div class="stat-box"><div>SIGNAL</div><div class="stat-val" id="v-sig">LINKING...</div></div>
     </div>
 
     <div id="tac-tab">
         <div class="handle" onclick="toggleTab(event)">TACTICAL</div>
-        <div class="game-ctrl">
-            <button class="ctrl-btn" style="background: var(--neon); color: black;" onclick="startGame(event)">START DRILL</button>
-            <button class="ctrl-btn" style="background: #ff3333; color: white;" onclick="resetTimer(event)">RESET TIMER</button>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <button style="flex:1; background:var(--neon); color:black; border:none; padding:10px; font-family:inherit; font-weight:bold; border-radius:4px;" onclick="startGame(event)">START DRILL</button>
+            <button style="flex:1; background:#ff3333; color:white; border:none; padding:10px; font-family:inherit; font-weight:bold; border-radius:4px;" onclick="resetTimer(event)">RESET</button>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 10px;">
-            <div>TIMER: <span id="timer-ui" style="color:white">30.0</span></div>
-            <div>SCORE: <span id="current-ui" style="color:white">0</span></div>
-            <div>HIGH: <span id="high-ui" style="color:white">0</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 5px;">
+            <div>TIMER: <span id="timer-ui">30.0</span></div>
+            <div>SCORE: <span id="current-ui">0</span></div>
+            <div>HIGH: <span id="high-ui">0</span></div>
         </div>
-        <div id="target-ptr" style="font-size:32px; text-align:center; color:rgba(255,255,255,0.2); height:35px;"></div>
-        <div id="input-ptr" style="font-size:48px; text-align:center; height:55px; color:white; display:flex; justify-content:center; gap:8px;"></div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 200px; margin: 0 auto;">
+        <div id="target-ptr" style="font-size:24px; text-align:center; color:rgba(255,255,255,0.2); height:30px;"></div>
+        <div id="input-ptr" style="font-size:32px; text-align:center; height:40px; color:white; display:flex; justify-content:center; gap:8px;"></div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 180px; margin: 0 auto;">
             <div></div><button class="k-btn" onclick="gameInput('↑', event)">↑</button><div></div>
             <button class="k-btn" onclick="gameInput('←', event)">←</button>
             <button class="k-btn" onclick="gameInput('↓', event)">↓</button>
@@ -103,36 +109,51 @@
     let target = [], user = [];
     let audioCtx;
 
-    async function bootSystem() {
+    function handleClick(e) {
+        if(!active) return;
+        // Ripple
+        const r = document.createElement('div');
+        r.className = 'ripple'; r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+        document.body.appendChild(r);
+        setTimeout(() => r.remove(), 400);
+        // Sound
+        if(audioCtx) {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(800, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + 0.1);
+        }
+    }
+
+    async function bootSystem(e) {
+        e.stopPropagation();
         if(active) return;
+        
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        await audioCtx.resume();
+
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             try { await DeviceOrientationEvent.requestPermission(); } catch (e) {}
         }
+
         active = true;
         document.getElementById('boot-layer').style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
         
-        const welcome = new SpeechSynthesisUtterance("Neural link established. All systems online.");
-        const voices = window.speechSynthesis.getVoices();
-        welcome.voice = voices.find(v => v.lang.includes('en-GB')) || voices;
+        const welcome = new SpeechSynthesisUtterance("Neural link established. Welcome back, Lachlan.");
         window.speechSynthesis.speak(welcome);
 
         requestGPS();
-        window.addEventListener('deviceorientation', handleMove);
-    }
-
-    function handleMove(e) {
-        let h = e.webkitCompassHeading || (360 - e.alpha);
-        let pitch = e.beta; // Tilt front/back
-        let roll = e.gamma; // Tilt left/right
-        
-        if(h) {
-            document.getElementById('mag-ring').style.transform = `rotate(${-h}deg)`;
-            document.getElementById('deg-readout').innerText = Math.round(h) + '°';
-            // Grid Rotation
-            document.getElementById('ground-grid').style.transform = `rotateX(${60 + (pitch/2)}deg) rotateZ(${-h}deg)`;
-        }
+        window.addEventListener('deviceorientation', (e) => {
+            let h = e.webkitCompassHeading || (360 - e.alpha);
+            if(h) {
+                document.getElementById('mag-ring').style.transform = `rotate(${-h}deg)`;
+                document.getElementById('deg-readout').innerText = Math.round(h) + '°';
+                document.getElementById('ground-grid').style.transform = `rotateX(70deg) rotateZ(${-h}deg)`;
+            }
+        });
     }
 
     function requestGPS() {
@@ -140,60 +161,16 @@
             document.getElementById('v-spd').innerText = (p.coords.speed * 2.237 || 0).toFixed(1) + " MPH";
             document.getElementById('v-alt').innerText = (p.coords.altitude * 3.281 || 0).toFixed(0) + " FT";
             document.getElementById('v-gps').innerText = `${p.coords.latitude.toFixed(4)}N ${p.coords.longitude.toFixed(4)}W`;
-            document.getElementById('coord-label').innerText = "COORDINATES"; // Remove retry text
-            document.getElementById('v-sig').innerText = p.coords.accuracy < 20 ? "EXCELLENT" : "WEAK";
-        }, (err) => {
-            document.getElementById('v-gps').innerText = "SIGNAL DENIED";
-        }, {enableHighAccuracy: true});
+            document.getElementById('v-sig').innerText = "STABLE";
+        }, null, {enableHighAccuracy: true});
     }
 
     function toggleTab(e) { e.stopPropagation(); document.getElementById('tac-tab').classList.toggle('open'); }
-
-    function startGame(e) {
-        e.stopPropagation(); if(gameRunning) return;
-        gameRunning = true; currentScore = 0; timeLeft = 30;
-        document.getElementById('current-ui').innerText = "0";
-        newSequence();
-        timerInterval = setInterval(() => {
-            timeLeft -= 0.1;
-            document.getElementById('timer-ui').innerText = Math.max(0, timeLeft).toFixed(1);
-            if(timeLeft <= 0) { clearInterval(timerInterval); gameRunning = false; }
-        }, 100);
-    }
-
-    function resetTimer(e) {
-        e.stopPropagation(); clearInterval(timerInterval);
-        gameRunning = false; timeLeft = 30;
-        document.getElementById('timer-ui').innerText = "30.0";
-        document.getElementById('input-ptr').innerText = "";
-        document.getElementById('target-ptr').innerText = "";
-    }
-
-    function newSequence() {
-        const icons = ['↑', '←', '↓', '→'];
-        target = Array.from({length: 4}, () => icons[Math.floor(Math.random() * 4)]);
-        document.getElementById('target-ptr').innerText = target.join(' ');
-        document.getElementById('input-ptr').innerText = '';
-        user = [];
-    }
-
-    function gameInput(dir, e) {
-        e.stopPropagation(); if(!gameRunning) return;
-        user.push(dir);
-        document.getElementById('input-ptr').innerText = user.join(' ');
-        if (user[user.length-1] !== target[user.length-1]) {
-            user = [];
-            document.getElementById('input-ptr').style.color = 'red';
-            setTimeout(() => { document.getElementById('input-ptr').innerText = ''; document.getElementById('input-ptr').style.color = 'white'; }, 200);
-        } else if (user.length === target.length) {
-            currentScore++;
-            document.getElementById('current-ui').innerText = currentScore;
-            if(currentScore > highScore) { highScore = currentScore; document.getElementById('high-ui').innerText = highScore; }
-            document.getElementById('input-ptr').style.color = 'yellow';
-            setTimeout(newSequence, 300);
-        }
-    }
-
+    function startGame(e) { e.stopPropagation(); if(gameRunning) return; gameRunning = true; currentScore = 0; timeLeft = 30; newSequence(); timerInterval = setInterval(() => { timeLeft -= 0.1; document.getElementById('timer-ui').innerText = Math.max(0, timeLeft).toFixed(1); if(timeLeft <= 0) { clearInterval(timerInterval); gameRunning = false; } }, 100); }
+    function resetTimer(e) { e.stopPropagation(); clearInterval(timerInterval); gameRunning = false; timeLeft = 30; document.getElementById('timer-ui').innerText = "30.0"; document.getElementById('input-ptr').innerText = ""; document.getElementById('target-ptr').innerText = ""; }
+    function newSequence() { const icons = ['↑', '←', '↓', '→']; target = Array.from({length: 4}, () => icons[Math.floor(Math.random() * 4)]); document.getElementById('target-ptr').innerText = target.join(' '); document.getElementById('input-ptr').innerText = ''; user = []; }
+    function gameInput(dir, e) { e.stopPropagation(); if(!gameRunning) return; user.push(dir); document.getElementById('input-ptr').innerText = user.join(' '); if (user[user.length-1] !== target[user.length-1]) { user = []; document.getElementById('input-ptr').style.color = 'red'; setTimeout(() => { document.getElementById('input-ptr').innerText = ''; document.getElementById('input-ptr').style.color = 'white'; }, 200); } else if (user.length === target.length) { currentScore++; document.getElementById('current-ui').innerText = currentScore; if(currentScore > highScore) { highScore = currentScore; document.getElementById('high-ui').innerText = highScore; } document.getElementById('input-ptr').style.color = 'yellow'; setTimeout(newSequence, 300); } }
+    
     setInterval(() => {
         const n = new Date();
         document.getElementById('t-ptr').innerText = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true});
