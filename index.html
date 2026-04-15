@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ARTHUR OS MK XVII</title>
+    <title>ARTHUR OS MK XVIII</title>
     <style>
         :root { --neon: #00d4ff; --dark: #050505; --fade: rgba(0, 212, 255, 0.2); }
-        body { background: var(--dark); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-transform: uppercase; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* Stop all scrolling */
+        html, body { 
+            position: fixed; overflow: hidden; width: 100%; height: 100%; 
+            background: var(--dark); color: var(--neon); 
+            font-family: 'Courier New', monospace; margin: 0; padding: 0;
+            text-transform: uppercase; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
         
         .ripple { position: absolute; border: 2px solid var(--neon); border-radius: 50%; pointer-events: none; animation: ripple-out 0.4s ease-out; transform: translate(-50%, -50%); z-index: 9999; }
         @keyframes ripple-out { from { width: 0; height: 0; opacity: 1; } to { width: 80px; height: 80px; opacity: 0; } }
@@ -16,37 +23,31 @@
         #boot-layer { position: fixed; inset: 0; background: var(--dark); z-index: 1000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .boot-box { border: 2px solid var(--neon); padding: 40px; text-align: center; box-shadow: 0 0 15px var(--neon); background: var(--dark); }
 
-        .hud { height: 100vh; display: none; flex-direction: column; padding: 20px; position: relative; box-sizing: border-box; }
+        .hud { height: 100%; display: none; flex-direction: column; padding: 40px 20px 20px 20px; position: relative; box-sizing: border-box; }
 
-        /* Compass Visuals */
-        .compass-area { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
+        /* Moved compass down */
+        .compass-area { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; margin-top: 30px; }
         .scan-ring { position: absolute; width: 200px; height: 200px; border: 1px solid var(--fade); border-radius: 50%; border-top: 2px solid var(--neon); animation: spin 4s linear infinite; }
-        .zero-mark { position: absolute; top: -15px; color: white; font-weight: bold; font-size: 14px; }
         #mag-ring { width: 140px; height: 140px; border: 2px solid var(--neon); border-radius: 50%; position: relative; border-style: double; }
         .red-ptr { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 22px; }
 
-        /* Stats Grid - Moved up to avoid overlap */
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .stat-box { border: 1px solid var(--fade); padding: 10px; background: rgba(0,212,255,0.05); }
         .stat-val { font-size: 16px; font-weight: bold; color: white; margin-top: 4px; }
 
-        /* Tactical Tab - Adjusted Height & Position */
+        /* Adjusted Tab handle and position */
         #tac-tab { 
-            position: absolute; bottom: -360px; left: 0; width: 100%; height: 460px; 
+            position: absolute; bottom: -380px; left: 0; width: 100%; height: 460px; 
             background: rgba(0,10,15,0.98); border-top: 2px solid var(--neon); 
-            transition: 0.3s ease-out; z-index: 100; padding: 15px; box-sizing: border-box;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 15px; box-sizing: border-box;
         }
         #tac-tab.open { bottom: 0; }
-        .handle { width: 120px; height: 35px; background: var(--neon); color: black; margin: -50px auto 10px auto; text-align: center; font-weight: bold; line-height: 35px; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
+        .handle { width: 130px; height: 35px; background: var(--neon); color: black; margin: -50px auto 10px auto; text-align: center; font-weight: bold; line-height: 35px; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
 
         .game-ctrl { display: flex; gap: 8px; margin-bottom: 10px; }
         .ctrl-btn { flex: 1; border: none; padding: 12px; font-weight: bold; font-family: inherit; font-size: 12px; border-radius: 4px; }
         
         .score-row { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 10px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid var(--fade); padding-bottom: 5px; }
-        
-        .target-box { font-size: 32px; text-align: center; color: rgba(255, 255, 255, 0.4); margin-bottom: 5px; height: 35px; }
-        .input-box { font-size: 48px; text-align: center; height: 55px; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        
         .k-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 210px; margin: 5px auto; }
         .k-btn { background: var(--fade); border: 1px solid var(--neon); color: var(--neon); padding: 18px; font-size: 28px; border-radius: 8px; }
 
@@ -70,7 +71,6 @@
 
     <div class="compass-area">
         <div class="scan-ring"></div>
-        <div class="zero-mark">0</div>
         <div id="mag-ring"><div class="red-ptr">▼</div></div>
         <div id="deg-readout" style="position: absolute; font-size: 32px; font-weight: bold; color: white;">0°</div>
     </div>
@@ -83,21 +83,17 @@
 
     <div id="tac-tab">
         <div class="handle" onclick="toggleTab(event)">TACTICAL</div>
-        
         <div class="game-ctrl">
             <button class="ctrl-btn" style="background: var(--neon); color: black;" onclick="startGame(event)">START DRILL</button>
             <button class="ctrl-btn" style="background: #ff3333; color: white;" onclick="resetTimer(event)">RESET TIMER</button>
         </div>
-        
         <div class="score-row">
-            <div>TIMER: <span id="timer-ui" style="color:var(--neon);">30.0</span></div>
-            <div>CURRENT: <span id="current-ui" style="color:var(--neon);">0</span></div>
-            <div>HIGH: <span id="high-ui" style="color:var(--neon);">0</span></div>
+            <div>TIMER: <span id="timer-ui">30.0</span></div>
+            <div>CURRENT: <span id="current-ui">0</span></div>
+            <div>HIGH: <span id="high-ui">0</span></div>
         </div>
-        
-        <div id="target-ptr" class="target-box"></div>
-        <div id="input-ptr" class="input-box"></div>
-        
+        <div id="target-ptr" style="font-size:32px; text-align:center; color:rgba(255,255,255,0.4); height:35px;"></div>
+        <div id="input-ptr" style="font-size:48px; text-align:center; height:55px; color:white; display:flex; justify-content:center; gap:10px;"></div>
         <div class="k-grid">
             <div></div><button class="k-btn" onclick="gameInput('↑', event)">↑</button><div></div>
             <button class="k-btn" onclick="gameInput('←', event)">←</button>
@@ -111,14 +107,14 @@
     let active = false, currentScore = 0, highScore = 0, timeLeft = 30, gameRunning = false, timerInterval;
     let target = [], user = [];
     const tts = window.speechSynthesis;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx;
 
     function handleTap(e) {
         const ripple = document.createElement('div');
         ripple.className = 'ripple'; ripple.style.left = e.clientX + 'px'; ripple.style.top = e.clientY + 'px';
         document.body.appendChild(ripple);
         setTimeout(() => ripple.remove(), 400);
-        if(active) playSound(1000);
+        if(active && audioCtx) playSound(1000);
     }
 
     function playSound(f) {
@@ -133,25 +129,30 @@
     async function bootSystem() {
         if(active) return;
         
-        // 1. IMMEDIATE PERMISSION REQUEST (Must be first for iOS)
+        // 1. Initialize Audio Context on first tap
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        await audioCtx.resume();
+
+        // 2. iOS Sensor Permission
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            try {
-                await DeviceOrientationEvent.requestPermission();
-            } catch (e) { console.log("Sensor init skip"); }
+            try { await DeviceOrientationEvent.requestPermission(); } catch (e) {}
         }
 
         active = true;
-        audioCtx.resume();
         document.getElementById('boot-layer').style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
         
-        // 2. Arthur Greeting
+        // 3. Arthur Voice Workaround
         const welcome = new SpeechSynthesisUtterance("Welcome back, Lachlan. All systems online.");
-        const voices = tts.getVoices();
+        welcome.rate = 1.0;
+        welcome.pitch = 1.0;
+        
+        // Force the browser to find voices
+        let voices = tts.getVoices();
         welcome.voice = voices.find(v => v.lang.includes('en-GB')) || voices;
         tts.speak(welcome);
 
-        // 3. Sensors
+        // 4. Start Compass & GPS
         window.addEventListener('deviceorientation', (e) => {
             let h = e.webkitCompassHeading || (360 - e.alpha);
             if(h) {
@@ -172,22 +173,19 @@
     function startGame(e) {
         e.stopPropagation();
         if(gameRunning) return;
-        gameRunning = true;
-        currentScore = 0;
+        gameRunning = true; currentScore = 0;
         document.getElementById('current-ui').innerText = "0";
         newSequence();
         timerInterval = setInterval(() => {
             timeLeft -= 0.1;
             document.getElementById('timer-ui').innerText = Math.max(0, timeLeft).toFixed(1);
-            if(timeLeft <= 0) { clearInterval(timerInterval); gameRunning = false; playSound(400); }
+            if(timeLeft <= 0) { clearInterval(timerInterval); gameRunning = false; }
         }, 100);
     }
 
     function resetTimer(e) {
-        e.stopPropagation();
-        clearInterval(timerInterval);
-        gameRunning = false;
-        timeLeft = 30;
+        e.stopPropagation(); clearInterval(timerInterval);
+        gameRunning = false; timeLeft = 30;
         document.getElementById('timer-ui').innerText = "30.0";
         document.getElementById('input-ptr').innerText = "";
         document.getElementById('target-ptr').innerText = "";
@@ -202,8 +200,7 @@
     }
 
     function gameInput(dir, e) {
-        e.stopPropagation();
-        if(!gameRunning) return;
+        e.stopPropagation(); if(!gameRunning) return;
         user.push(dir);
         document.getElementById('input-ptr').innerText = user.join(' ');
         if (user[user.length-1] !== target[user.length-1]) {
@@ -213,10 +210,7 @@
         } else if (user.length === target.length) {
             currentScore++;
             document.getElementById('current-ui').innerText = currentScore;
-            if(currentScore > highScore) {
-                highScore = currentScore;
-                document.getElementById('high-ui').innerText = highScore;
-            }
+            if(currentScore > highScore) { highScore = currentScore; document.getElementById('high-ui').innerText = highScore; }
             document.getElementById('input-ptr').style.color = 'yellow';
             playSound(1500);
             setTimeout(newSequence, 300);
